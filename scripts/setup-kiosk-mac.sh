@@ -17,6 +17,9 @@
 #   HA_CONFIG    caminho local do config (share montado; dispensa SSH)
 #   DASHBOARD    caminho do painel a abrir  (default: lovelace/relogio)
 #   KIOSK_QUERY  parâmetro de kiosk na URL  (default: ?kiosk)
+#   HA_TOKEN     token de longa duração; se definido, registra o recurso do
+#                Lovelace automaticamente (nada de colar esse token em chat)
+#   HA_TOKEN_FILE  arquivo com o token, alternativa a HA_TOKEN
 #   SKIP_DEPLOY  1 para só (re)criar o lançador
 
 set -euo pipefail
@@ -57,6 +60,17 @@ if [[ "${SKIP_DEPLOY:-0}" != "1" ]]; then
   else
     ./scripts/deploy-ha.sh
   fi
+fi
+
+# ------------------------------------------------- 1b. recurso no Lovelace
+if [[ -n "${HA_TOKEN:-}" || -n "${HA_TOKEN_FILE:-}" ]]; then
+  say "Registrando o recurso no Lovelace (WebSocket API)"
+  reg=(python3 ./scripts/register-resource.py --host "${HA_HOST:-HA_HOST}" --port "$HA_PORT" --bump)
+  [[ -n "${HA_TOKEN_FILE:-}" ]] && reg+=(--token-file "$HA_TOKEN_FILE")
+  run "${reg[@]}"
+  REGISTERED=1
+else
+  REGISTERED=0
 fi
 
 # ------------------------------------------------------------- 2. lançador
@@ -141,9 +155,24 @@ EOF
 fi
 
 # ----------------------------------------------------------------- resumo
-cat <<EOF
+if [[ "${REGISTERED:-0}" -eq 1 ]]; then
+  cat <<EOF
 
-$(printf '\033[1m')Falta só o passo que exige a interface do HA:$(printf '\033[0m')
+$(printf '\033[1m')Falta só criar a view do relógio:$(printf '\033[0m')
+
+  Dashboard → Editar → + View → título: Relógio | url: relogio
+  | tipo: Painel (1 card), e adicionar o card "Protetor de Tela"
+  (YAML pronto em docs/SCREENSAVER.md)
+
+Para abrir o painel em tela cheia:
+
+  $LAUNCHER
+
+EOF
+else
+  cat <<EOF
+
+$(printf '\033[1m')Faltam os passos que exigem a interface do HA:$(printf '\033[0m')
 
   1. Abra http://${HA_HOST:-HA_HOST}:${HA_PORT}/config/lovelace/resources
      (precisa de "Modo avançado" ligado no seu perfil)
@@ -153,8 +182,13 @@ $(printf '\033[1m')Falta só o passo que exige a interface do HA:$(printf '\033[
         título: Relógio   |   url: relogio   |   tipo: Painel (1 card)
      e adicione o card "Protetor de Tela" (YAML em docs/SCREENSAVER.md)
 
-Depois, para abrir o painel em tela cheia:
+  Para automatizar o passo 1 e 2, exporte um token e rode de novo:
+     export HA_TOKEN='...'   # perfil → Segurança → Tokens de longa duração
+     HA_HOST=${HA_HOST:-HA_HOST} SKIP_DEPLOY=1 ./scripts/setup-kiosk-mac.sh
+
+Para abrir o painel em tela cheia:
 
   $LAUNCHER
 
 EOF
+fi

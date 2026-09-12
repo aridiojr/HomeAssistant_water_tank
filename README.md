@@ -9,7 +9,8 @@ Dois custom cards, sem dependências e sem build:
 
 Deploy e modo kiosk (Mac, tablet, Raspberry Pi): [docs/KIOSK.md](docs/KIOSK.md).
 Enviar os arquivos para o HA: `./scripts/deploy-ha.sh` (use `--dry-run` primeiro).
-No Mac, `./scripts/setup-kiosk-mac.sh` faz o envio e o lançador de kiosk de uma vez.
+No Mac, `./scripts/setup-kiosk-mac.sh` faz o envio, o registro do recurso no
+Lovelace (com `HA_TOKEN`) e o lançador de kiosk de uma vez.
 
 ---
 

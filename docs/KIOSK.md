@@ -21,6 +21,35 @@ Variáveis úteis: `HA_SSH_PORT`, `HA_SSH_USER`, `HA_CONFIG` (share montado, sem
 SSH), `DASHBOARD` (default `lovelace/relogio`), `SKIP_DEPLOY=1` (só recria o
 lançador).
 
+Com um token de longa duração o script também registra o recurso no Lovelace,
+dispensando os cliques do passo 2:
+
+```bash
+export HA_TOKEN='...'    # perfil do HA → Segurança → Tokens de longa duração
+HA_HOST=192.168.1.50 ./scripts/setup-kiosk-mac.sh
+```
+
+O token dá acesso total à instância — mantenha-o só na sua máquina (use
+`HA_TOKEN_FILE=~/.ha_token` se preferir não deixá-lo no histórico do shell) e
+nunca o cole em chat.
+
+### Registrar o recurso sem a interface
+
+O registro de recursos só existe na WebSocket API do HA (não há endpoint REST).
+`scripts/register-resource.py` fala esse protocolo usando apenas a biblioteca
+padrão do Python 3 — nada para instalar:
+
+```bash
+export HA_TOKEN='...'
+python3 scripts/register-resource.py --host 192.168.1.50 --list     # ver o que já existe
+python3 scripts/register-resource.py --host 192.168.1.50            # registrar o que falta
+python3 scripts/register-resource.py --host 192.168.1.50 --bump     # incrementar o ?v=
+python3 scripts/register-resource.py --host ha.exemplo.com --ssl    # instância via HTTPS
+```
+
+Ele é idempotente: recurso que já existe não é duplicado, e `--bump` só
+incrementa a versão para furar o cache do navegador.
+
 Remover o autostart:
 
 ```bash
