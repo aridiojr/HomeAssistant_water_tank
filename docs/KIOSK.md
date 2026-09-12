@@ -3,6 +3,31 @@
 Guia para colocar o `screensaver-card.js` no servidor e deixar um painel
 rodando em tela cheia (Mac, tablet Android ou Raspberry Pi).
 
+## Atalho: tudo em um comando (macOS)
+
+```bash
+HA_HOST=192.168.1.50 ./scripts/setup-kiosk-mac.sh --dry-run   # confere sem alterar nada
+HA_HOST=192.168.1.50 ./scripts/setup-kiosk-mac.sh             # envia + cria o lançador
+HA_HOST=192.168.1.50 ./scripts/setup-kiosk-mac.sh --autostart # ...e abre no login
+```
+
+Esse script faz os passos 1 e 5 deste guia: envia os cards para `config/www`,
+cria `~/bin/ha-kiosk.sh` (Chrome em kiosk + `caffeinate` para a tela não
+apagar) e, com `--autostart`, registra um LaunchAgent para abrir no login.
+O registro do recurso no Lovelace (passo 2) continua sendo pela interface do
+HA — são quatro cliques e o script imprime o link direto.
+
+Variáveis úteis: `HA_SSH_PORT`, `HA_SSH_USER`, `HA_CONFIG` (share montado, sem
+SSH), `DASHBOARD` (default `lovelace/relogio`), `SKIP_DEPLOY=1` (só recria o
+lançador).
+
+Remover o autostart:
+
+```bash
+launchctl unload ~/Library/LaunchAgents/com.ha-kiosk.plist
+rm ~/Library/LaunchAgents/com.ha-kiosk.plist
+```
+
 ## 1. Enviar o arquivo para o HA
 
 ### Opção A — SSH (add-on “Advanced SSH & Web Terminal”)
