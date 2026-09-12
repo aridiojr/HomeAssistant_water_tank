@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preview - Protetor de Tela</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #eee;
+               font-family: system-ui, -apple-system, sans-serif; }
+  #stage { position: fixed; inset: 0; }
+  #panel {
+    position: fixed; top: 10px; right: 10px; z-index: 10;
+    background: rgba(255,255,255,0.08); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+    padding: 10px 12px; font-size: 12px; display: grid; gap: 6px;
+  }
+  #panel label { display: flex; align-items: center; gap: 6px; }
+  #panel input[type="number"] { width: 64px; }
+</style>
+</head>
+<body>
+  <div id="stage"><div class="ss-content" id="content"></div></div>
+  <div id="panel">
+    <strong>Preview local</strong>
+    <label><input type="checkbox" id="night" checked /> noite (escurecido)</label>
+    <label><input type="checkbox" id="seconds" /> segundos</label>
+    <label>brilho noite <input type="number" id="nb" step="0.05" min="0.05" max="1" value="0.35" /></label>
+  </div>
+
+  <script src="../screensaver-card.js"></script>
+  <script>
+    // hass falso, só pro preview: os mesmos sensores que o card busca no HA real
+    const hass = { states: {
+      'sun.sun': { state: 'below_horizon', attributes: {} },
+      'sensor.utilidades_temperatura': { state: '23.4', attributes: { device_class: 'temperature', unit_of_measurement: '°C' } },
+      'sensor.utilidades_umidade': { state: '61', attributes: { device_class: 'humidity', unit_of_measurement: '%' } },
+      'sensor.utilidades_pressao': { state: '1013.6', attributes: { device_class: 'atmospheric_pressure', unit_of_measurement: 'hPa' } },
+    }};
+
+    const H = window.ScreensaverCardHelpers;
+    const stage = document.getElementById('stage');
+    const content = document.getElementById('content');
+    const style = document.createElement('style');
+    document.head.appendChild(style);
+
+    function config() {
+      return { ...H.defaults(),
+        show_seconds: document.getElementById('seconds').checked,
+        night_brightness: Number(document.getElementById('nb').value) || 0.35,
+      };
+    }
+
+    function draw() {
+      const c = config();
+      hass.states['sun.sun'].state =
+        document.getElementById('night').checked ? 'below_horizon' : 'above_horizon';
+      style.textContent = H.styles(c);
+      content.innerHTML = H.contentHtml(H.buildItems(hass, c), H.formatClock(c), c);
+      content.style.filter = `brightness(${H.brightness(hass, c)})`;
+      stage.style.background = c.background;
+    }
+
+    document.getElementById('panel').addEventListener('change', draw);
+    draw();
+    setInterval(draw, 1000);
+  </script>
+</body>
+</html>

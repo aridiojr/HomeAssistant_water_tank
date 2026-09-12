@@ -1,7 +1,21 @@
-# Caixa D'Água Card
+# Cards customizados para Home Assistant
 
-Custom card para Home Assistant que exibe o nível de uma caixa d'água no formato
-real dela (tronco de cone), com água subindo/descendo conforme um sensor de 0-100%.
+Dois custom cards, sem dependências e sem build:
+
+| Card | Tipo | O que faz |
+|---|---|---|
+| **Caixa D'Água** | `custom:caixa-dagua-card` | Nível da caixa no formato real dela (tronco de cone), com água subindo/descendo conforme um sensor de 0-100%. |
+| **Protetor de Tela** | `custom:screensaver-card` | Protetor de tela para painéis: fundo escuro, relógio, data e sensores (temperatura, umidade, pressão) com escurecimento noturno. Veja [docs/SCREENSAVER.md](docs/SCREENSAVER.md). |
+
+Deploy e modo kiosk (Mac, tablet, Raspberry Pi): [docs/KIOSK.md](docs/KIOSK.md).
+Enviar os arquivos para o HA: `./scripts/deploy-ha.sh` (use `--dry-run` primeiro).
+
+---
+
+## Caixa D'Água Card
+
+Exibe o nível de uma caixa d'água no formato real dela (tronco de cone), com
+água subindo/descendo conforme um sensor de 0-100%.
 
 ![preview](preview.png)
 
@@ -49,3 +63,26 @@ low_threshold: 20
 ```
 
 Também é possível configurar tudo pelo editor visual do Lovelace (sem precisar de YAML).
+
+---
+
+## Protetor de Tela
+
+![protetor de tela](docs/screensaver-preview.png)
+
+Depois de alguns segundos sem interação, cobre o painel com um fundo escuro
+mostrando relógio, data e os sensores do ESPHome (temperatura, umidade e
+pressão atmosférica). À noite o conteúdo escurece sozinho (via `sun.sun` ou
+faixa de horário) e qualquer toque desliga o protetor.
+
+```yaml
+type: custom:screensaver-card
+mode: overlay
+idle_seconds: 120
+entity_prefix: utilidades
+night_brightness: 0.3
+```
+
+- Todas as opções e exemplos: [docs/SCREENSAVER.md](docs/SCREENSAVER.md)
+- Instalação, kiosk e escurecimento noturno: [docs/KIOSK.md](docs/KIOSK.md)
+- Prévia local sem o HA: abra `docs/preview.html` no navegador
